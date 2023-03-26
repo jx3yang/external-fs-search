@@ -1,4 +1,4 @@
-SERVICE = service
+SERVICE = watcher-service
 
 # source files
 SRC_DIR = src
@@ -6,8 +6,8 @@ SRC_EXT = cpp
 SRC_FILES = $(wildcard $(SRC_DIR)/*.$(SRC_EXT))
 
 # header files
-INC_DIR = include
-INCLUDES = -I. -I,$(INC_DIR)
+INC_DIR = /include
+INCLUDES = -I. -I.$(INC_DIR)
 
 # objects
 OBJ_DIR = obj
@@ -18,7 +18,7 @@ DEPS = $(OBJS:.o=.d)
 
 # compiler
 CC = clang++
-CFLAGS = -std=c++17 -Wall -g
+CFLAGS = -std=c++17 -Wall -g -O3
 CFLAGS += $(INCLUDES)
 LFLAGS = -framework CoreServices
 

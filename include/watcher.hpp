@@ -20,7 +20,8 @@ class Watcher {
   /**
    * API
    */
-  bool StartWatching(dispatch_queue_t dispatch_queue, FSEventStreamCallback callback);
+  FSEventStreamRef StartWatching(dispatch_queue_t dispatch_queue, FSEventStreamCallback callback, bool file_level);
+  FSEventStreamRef StartWatching(dispatch_queue_t dispatch_queue, FSEventStreamCallback callback);
   bool StopWatching();
 
   /**
@@ -36,6 +37,7 @@ class Watcher {
   CFArrayRef path_array_ref_;
   CFAbsoluteTime latency_;
   FSEventStreamRef stream_;
+  std::string path_;
 
   bool StopWatching(FSEventStreamRef stream);
 };

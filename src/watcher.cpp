@@ -1,4 +1,5 @@
-#include "include/watcher.hpp"
+#include <watcher.hpp>
+#include <iostream>
 
 namespace directory {
 
@@ -7,7 +8,8 @@ Watcher::Watcher(std::string path_to_directory, CFAbsoluteTime latency)
                                         path_to_directory.size(), kCFStringEncodingUTF8, false)},
       path_array_ref_{CFArrayCreate(NULL, (const void**)&path_ref_, 1, NULL)},
       latency_{latency},
-      stream_{nullptr} {}
+      stream_{nullptr},
+      path_{path_to_directory} {}
 
 Watcher& Watcher::operator=(Watcher&& other) {
   path_ref_ = std::exchange(other.path_ref_, nullptr);
@@ -33,14 +35,21 @@ Watcher::~Watcher() {
   }
 }
 
-bool Watcher::StartWatching(dispatch_queue_t dispatch_queue, FSEventStreamCallback callback) {
-  stream_ = FSEventStreamCreate(NULL, callback, NULL, path_array_ref_, kFSEventStreamEventIdSinceNow, latency_,
-                                kFSEventStreamCreateFlagWatchRoot | kFSEventStreamCreateFlagFileEvents);
+FSEventStreamRef Watcher::StartWatching(dispatch_queue_t dispatch_queue, FSEventStreamCallback callback, bool file_level) {
+  FSEventStreamCreateFlags flags = kFSEventStreamCreateFlagWatchRoot;
+  if (file_level) {
+    flags |= kFSEventStreamCreateFlagFileEvents;
+  }
+  stream_ = FSEventStreamCreate(NULL, callback, NULL, path_array_ref_, kFSEventStreamEventIdSinceNow, latency_, flags);
   FSEventStreamSetDispatchQueue(stream_, dispatch_queue);
   if (FSEventStreamStart(stream_)) {
-    return true;
+    return stream_;
   }
-  return false;
+  return NULL;
+}
+
+FSEventStreamRef Watcher::StartWatching(dispatch_queue_t dispatch_queue, FSEventStreamCallback callback) {
+  return StartWatching(dispatch_queue, callback, true);
 }
 
 bool Watcher::StopWatching() { return StopWatching(stream_); }

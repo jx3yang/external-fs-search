@@ -4,22 +4,35 @@
 #include <CoreServices/CoreServices.h>
 
 #include <unordered_map>
-
-#include "include/watcher.hpp"
+#include <watcher.hpp>
 
 namespace directory {
 
 class WatcherManager {
  public:
-  WatcherManager();
+  static WatcherManager& get();
+
+ public:
   ~WatcherManager();
 
   /**
    * API
    */
   bool StartWatching(std::string path_to_directory);
-  bool StartWatching(std::string path_to_directory, CFAbsoluteTime latency);
+  bool StartWatching(std::string path_to_directory, bool file_level);
+  bool StartWatching(std::string path_to_directory, bool file_level, FSEventStreamCallback callback);
+  bool StartWatching(std::string path_to_directory, CFAbsoluteTime latency, bool file_level);
+  bool StartWatching(std::string path_to_directory, CFAbsoluteTime latency, bool file_level, FSEventStreamCallback callback);
+  bool StartWatchingVolumes();
   bool StopWatching(std::string path_to_directory);
+
+  std::string findByStream(ConstFSEventStreamRef stream) {
+    auto it = streams_map_.find((FSEventStreamRef) stream);
+    if (it != streams_map_.end()) {
+      return it->second;
+    }
+    return "";
+  }
 
   /**
    * Deleted initialization methods
@@ -32,7 +45,9 @@ class WatcherManager {
   WatcherManager& operator=(WatcherManager&&) = delete;
 
  private:
+  WatcherManager();
   std::unordered_map<std::string, Watcher> watchers_;
+  std::unordered_map<FSEventStreamRef, std::string> streams_map_;
   dispatch_queue_t dispatch_queue_;
 };
 
